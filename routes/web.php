@@ -15,7 +15,6 @@ Route::POST('newsletter',NewsletterController::class)->name('newsletter');
 
 
 Route::middleware('auth')->group( function () {
-    Route::get('admin/posts/create', [PostController::class, 'create'])->name('postCreate');
     Route::post('posts/{post}/comment', [PostCommentsController::class, 'store'])->name('comment');
     Route::post('logout', [SessionController::class, 'destroy'])->name('logout');
 });
@@ -27,5 +26,6 @@ Route::middleware('guest')->group( function () {
     Route::post('register', [RegisterController::class, 'store'])->name('register');
 });
 
-
-
+Route::middleware('admin')->group( function () {
+    Route::get('admin/posts/create', [PostController::class, 'create'])->name('postCreate');
+});
