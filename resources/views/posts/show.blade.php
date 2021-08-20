@@ -1,5 +1,5 @@
 
-
+Hello There
 <x-layouts>
     <section class="px-6 py-8">
         <main class="max-w-6xl mx-auto mt-10 lg:mt-20 space-y-6">
@@ -7,11 +7,11 @@
                 <div class="col-span-4 lg:text-center lg:pt-14 mb-10">
                     {{-- TODO --}}
                     <img src="{{ asset('storage/images/illustration-3.png') }}" alt="" class="rounded-xl">
-                    
+
                     <p class="mt-4 block text-gray-400 text-xs">
                         Published <time>{!! $post->created_at->diffForHumans() !!}</time>
                     </p>
-                    
+
                     <div class="flex items-center lg:justify-center text-sm mt-4">
                         <img src="{{ asset('storage/images/lary-avatar.svg') }}" alt="Lary avatar">
                         <div class="ml-3">
@@ -19,7 +19,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-span-8">
                     <div class="hidden lg:flex justify-between mb-6">
                         <a href="{{ route('posts') }}"
@@ -35,24 +35,24 @@
                             </svg>
                             Back to Posts
                         </a>
-                        
+
                         <div class="space-x-2">
                             <x-category-button :post="$post"></x-category-button>
                         </div>
                     </div>
-                    
+
                     <h1 class="font-bold text-3xl lg:text-4xl mb-10">{!! $post->title !!}</h1>
-                    
+
                     <div class="lg:text-lg leading-loose space-y-4">
                         {!! $post->body !!}
                     </div>
                     <section class="mt-10 space-y-6">
-                        
+
                         @include('posts._add-comment-form')
                         @foreach($post->comments as $comment)
                             <x-post-comments :comment="$comment"></x-post-comments>
                         @endforeach
-                    
+
                     </section>
                 </div>
             </article>
