@@ -1,12 +1,16 @@
-﻿<?php
+<?php
 
 namespace App\Providers;
 
-class convertKitNewsletter implements Newsletter
-{
 
+class ConvertKitNewsletter implements Newsletter
+{
+    /**
+     * @param string $email
+     * @param string|null $list
+     */
     public function subscribe(string $email, string $list = Null)
     {
-        // TODO: Implement subscribe() method.
+        //
     }
 }

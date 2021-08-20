@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PostController::class, 'index'])->name('posts');
 Route::get('posts/{post}', [PostController::class, 'show'])->name('post');
 
-Route::post('newsletter',NewsletterController::class)->name('newsletter');
+Route::POST('newsletter',NewsletterController::class)->name('newsletter');
 
 
 Route::middleware('auth')->group( function () {
@@ -26,3 +26,5 @@ Route::middleware('guest')->group( function () {
     Route::post('register', [RegisterController::class, 'store'])->name('register');
 });
 
+
+Route::get('admin/post/create', [PostController::class, 'create'])->name('postCreate');

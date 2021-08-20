@@ -1,4 +1,5 @@
-﻿<?php
+<?php
+
 namespace App\Providers;
 
 interface Newsletter
