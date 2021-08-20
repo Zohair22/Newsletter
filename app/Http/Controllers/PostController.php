@@ -8,6 +8,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Redirector;
 use Illuminate\Validation\Rule;
 
 class PostController extends Controller
@@ -43,17 +44,22 @@ class PostController extends Controller
     }
 
 
-    public function store(): RedirectResponse
+    public function store(): Redirector|Application|RedirectResponse
     {
         $attributes = request()->validate([
             'title' => 'required|string|max:255',
             'slug' => ['required' ,Rule::unique('posts', 'slug')],
-            'thumbnail' => ['file'],
+            'thumbnail' => ['image'],
             'body' => 'required',
             'excerpt' => 'required|string|max:255',
             'category_id' => ['required', Rule::exists('categories', 'id')],
             'user_id' => ['required', Rule::exists('users', 'id')],
         ]);
+
+        if (isset($attributes['thumbnail']))
+        {
+            $attributes['thumbnail']= $attributes['thumbnail']->store('thumbnails');
+        }
 
         $post = Post::create($attributes);
         return redirect(route('post', $post->slug));

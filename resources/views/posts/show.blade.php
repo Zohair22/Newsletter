@@ -5,7 +5,7 @@
             <article class="max-w-4xl mx-auto lg:grid lg:grid-cols-12 gap-x-10">
                 <div class="col-span-4 lg:text-center lg:pt-14 mb-10">
                     {{-- TODO --}}
-                    <img src="{{ asset('storage/images/illustration-3.png') }}" alt="" class="rounded-xl">
+                    <img src="{{ asset($post->thumbnail) }}" class="rounded-xl">
 
                     <p class="mt-4 block text-gray-400 text-xs">
                         Published <time>{!! $post->created_at->diffForHumans() !!}</time>

@@ -4,7 +4,7 @@
         <div>
             {{-- TODO --}}
             <a href="{{ route('post',$post->slug) }}">
-                <img src="{{ asset('storage/images/illustration-3.png') }}" alt="Blog Post illustration" class="rounded-3xl">
+                <img src="{{ asset($post->thumbnail) }}" alt="Blog Post illustration" class="rounded-3xl">
             </a>
         </div>
 

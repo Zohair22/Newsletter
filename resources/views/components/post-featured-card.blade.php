@@ -4,7 +4,7 @@
     <div class="py-6 px-5 lg:flex">
         <div class="flex-1 lg:mr-8">
             <a href="{{ route('post',$post->slug) }}">
-                <img src="{{ asset('storage/images/illustration-1.png') }}" alt="Blog Post illustration" class="rounded-xl">
+                <img src="{{ asset($post->thumbnail) }}" alt="Blog Post illustration" class="rounded-xl">
             </a>
         </div>
 
