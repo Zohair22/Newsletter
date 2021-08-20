@@ -4,8 +4,9 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
-class AdminsOnly
+class MustBeAdministrators
 {
     /**
      * Handle an incoming request.
@@ -16,6 +17,10 @@ class AdminsOnly
      */
     public function handle(Request $request, Closure $next)
     {
+        if (auth()->user()->username !== 'Zohair2')
+        {
+            abort(Response::HTTP_FORBIDDEN  );
+        }
         return $next($request);
     }
 }
