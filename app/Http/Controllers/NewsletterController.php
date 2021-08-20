@@ -2,19 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Providers\Newsletters;
+use App\Providers\MailchimpNewsletter;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Illuminate\Validation\ValidationException;
-use MailchimpMarketing\ApiClient;
 
 class NewsletterController extends Controller
 {
     /**
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function __invoke(Newsletters $newsletters): Redirector|Application|RedirectResponse
+    public function __invoke(MailchimpNewsletter $newsletters): Redirector|Application|RedirectResponse
     {
         request()->validate(['email'=> 'required|email']);
 

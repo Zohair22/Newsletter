@@ -32,7 +32,7 @@ return array(
     'App\\Providers\\AuthServiceProvider' => $baseDir . '/app/Providers/AuthServiceProvider.php',
     'App\\Providers\\BroadcastServiceProvider' => $baseDir . '/app/Providers/BroadcastServiceProvider.php',
     'App\\Providers\\EventServiceProvider' => $baseDir . '/app/Providers/EventServiceProvider.php',
-    'App\\Providers\\Newsletters' => $baseDir . '/app/Providers/Newsletters.php',
+    'App\\Providers\\MailchimpNewsletter' => $baseDir . '/app/Providers/Newsletters.php',
     'App\\Providers\\RouteServiceProvider' => $baseDir . '/app/Providers/RouteServiceProvider.php',
     'App\\View\\Components\\CategoryDropdown' => $baseDir . '/app/View/Components/CategoryDropdown.php',
     'Asm89\\Stack\\Cors' => $vendorDir . '/asm89/stack-cors/src/Cors.php',
