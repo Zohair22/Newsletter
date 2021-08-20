@@ -19,8 +19,8 @@ class MustBeAdministrators
     {
         if (auth()->user()->admin === 1)
         {
-            abort(Response::HTTP_FORBIDDEN  );
+            return $next($request);
         }
-        return $next($request);
+        return redirect(route('posts'));
     }
 }
