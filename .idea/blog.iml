@@ -20,5 +20,6 @@
     <orderEntry type="library" name="vue" level="application" />
     <orderEntry type="library" name="alpine" level="application" />
     <orderEntry type="library" name="tailwindcss" level="application" />
+    <orderEntry type="library" name="all" level="application" />
   </component>
 </module>

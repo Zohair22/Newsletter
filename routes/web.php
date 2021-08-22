@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\PostCommentsController;
+use App\Http\Controllers\AdminPostController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SessionController;
@@ -15,10 +16,19 @@ Route::POST('newsletter',NewsletterController::class)->name('newsletter');
 
 
 Route::middleware('auth')->group( function () {
-    Route::get('admin/posts/create', [PostController::class, 'create'])->middleware('admin')->name('postCreate');
-    Route::post('admin/posts', [PostController::class, 'store'])->middleware('admin')->name('postStore');
+
+    Route::get('admin/posts/create', [AdminPostController::class, 'create'])->name('postCreate');
+    Route::post('admin/posts', [AdminPostController::class, 'store'])->name('postStore');
+
+    Route::get('admin/posts', [AdminPostController::class, 'index'])->name('adminPosts');
+    Route::get('admin/posts/{post}/edit', [AdminPostController::class, 'edit'])->name('postEdit');
+    Route::patch('admin/posts/{post}', [AdminPostController::class, 'update'])->name('postUpdate');
+    Route::get('admin/posts/{post}/postDelete', [AdminPostController::class, 'destroy'])->name('postDelete');
+
     Route::post('posts/{post}/comment', [PostCommentsController::class, 'store'])->name('comment');
+
     Route::get('logout', [SessionController::class, 'destroy'])->name('logout');
+
 });
 
 Route::middleware('guest')->group( function () {

@@ -8,10 +8,7 @@
             required
             class="border border-gray-300 py-2 px-4 w-full rounded-3xl text-black-primary focus:outline-none"
     >
-        <option class="text-gray-400 text-lg" value="" disabled>Select Category</option>
-        @foreach($options as $category)
-            <option value="{{ $category->id }}" {{ old($name) === $category->id ? 'selected' : '' }}>{{ ucwords($category->name)  }}</option>
-        @endforeach
+        {{ $slot }}
     </select>
     @error($name)
     <p class="text-red-500 text-xs mt-2">{{ $message }}</p>

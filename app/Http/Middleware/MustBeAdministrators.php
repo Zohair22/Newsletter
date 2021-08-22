@@ -21,6 +21,6 @@ class MustBeAdministrators
         {
             return $next($request);
         }
-        return redirect(route('posts'));
+        return redirect(route('posts'))->with('adminErrorMessage', 'Only Administrator can access this');
     }
 }

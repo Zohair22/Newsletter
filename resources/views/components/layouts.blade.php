@@ -6,6 +6,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"/>
     <style>
         html{
             scroll-behavior: smooth;
@@ -27,7 +28,7 @@
                     <x-slot name="trigger">
                         <button class="text-sm font-bold mr-3">Welcome, {{ ucwords(auth()->user()->name) }}</button>
                     </x-slot>
-                    <x-dropdown-item href="{{ route('posts') }}" class="mt-2" active="{{ request()->routeIs('posts') }}">Dashboard</x-dropdown-item>
+                    <x-dropdown-item href="{{ route('adminPosts')}}" class="mt-2" active="{{ request()->routeIs('adminPosts') }}">All Posts</x-dropdown-item>
                     <x-dropdown-item href="{{ route('postCreate') }}" active="{{ request()->routeIs('postCreate') }}">New Post</x-dropdown-item>
                     <x-dropdown-item href="{{ route('logout') }}" class="font-semibold uppercase">logout</x-dropdown-item>
                 </x-dropdown>
