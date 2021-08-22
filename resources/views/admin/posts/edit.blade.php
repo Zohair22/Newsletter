@@ -11,7 +11,7 @@
             <x-form.input type="text" name="slug" autocomplete="slug" value="{{ old('slug', $post->slug) }}"></x-form.input>
             <div class="flex mt-6 ">
                 <div class="flex-1">
-                    <x-form.input name="thumbnail" type="file" value="{{ old('thumbnail', $post->thumbnail) }}"></x-form.input>
+                    <x-form.input name="thumbnail" type="file" value="{!! old('thumbnail', $post->thumbnail) !!}"></x-form.input>
                 </div>
                 <img src="{{ asset($post->thumbnail) }}" class="rounded-xl ml-5" width="100">
             </div>
@@ -27,6 +27,7 @@
             </x-form.select>
 
             <input type="hidden" name="user_id" value="{{ $post->user_id }}">
+            <input type="hidden" name="published_at" value="{{ $post->published_at }}">
 
             <x-form.button>Update</x-form.button>
         </form>

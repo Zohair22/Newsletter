@@ -10,6 +10,7 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -36,23 +37,11 @@ class AdminPostController extends Controller
 
     public function store(): Redirector|Application|RedirectResponse
     {
+        $post = Post::create(array_merge($this->validatePost(), [
+            'published_at' => Carbon::now(),
+            'thumbnail' => request('thumbnail')->store('thumbnails')
+        ]));
 
-        $attributes = request()->validate([
-            'title' => 'required|string|max:255',
-            'slug' => ['required', Rule::unique('posts', 'slug'), 'alpha_dash'],
-            'thumbnail' => ['image'],
-            'body' => 'required',
-            'excerpt' => 'required|string|max:255',
-            'category_id' => ['required', Rule::exists('categories', 'id')],
-            'user_id' => ['required', Rule::exists('users', 'id')],
-        ]);
-
-        if (isset($attributes['thumbnail']))
-        {
-            $attributes['thumbnail']= $attributes['thumbnail']->store('thumbnails');
-        }
-
-        $post = Post::create($attributes);
         return redirect(route('post', $post->slug))->with('success', 'Post Added');
     }
 
@@ -66,15 +55,7 @@ class AdminPostController extends Controller
 
     public function update(Post $post): Redirector|Application|RedirectResponse
     {
-        $attributes = request()->validate([
-            'title' => 'required|string|max:255',
-            'slug'=> ['required',Rule::unique('posts', 'slug')->ignore($post), 'alpha_dash' ],
-            'thumbnail' => ['image'],
-            'body' => 'required',
-            'excerpt' => 'required|string|max:255',
-            'category_id' => ['required', Rule::exists('categories', 'id')],
-            'user_id' => ['required', Rule::exists('users', 'id')],
-        ]);
+        $attributes = $this->validatePost($post);
 
         if (isset($attributes['thumbnail']))
         {
@@ -89,5 +70,25 @@ class AdminPostController extends Controller
     {
         $post->delete();
         return redirect(route('adminPosts'))->with('success', 'Deleted Successfully');
+    }
+
+    /**
+     * @param \App\Models\Post|null $post
+     *
+     * @return array
+     */
+    protected function validatePost(?Post $post = null): array
+    {
+        $post ??= new Post();
+        return request()->validate([
+            'title' => 'required|string|max:255',
+            'slug' => ['required', Rule::unique('posts', 'slug')->ignore($post), 'alpha_dash'],
+            'thumbnail' => $post->exists ? ['image '] : ['image', 'required'],
+            'body' => 'required',
+            'excerpt' => 'required|string|max:255',
+            'category_id' => ['required', Rule::exists('categories', 'id')],
+            'user_id' => ['required', Rule::exists('users', 'id')],
+            'published_at' => '',
+        ]);
     }
 }
