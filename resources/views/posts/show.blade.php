@@ -44,6 +44,14 @@
                                        class="text-red-500 hover:text-red-700 ml-1"><i class="far fa-trash-alt"></i></a>
                                 </div>
                             @endadmin
+                            @if($post->user_id === auth()->id())
+                                <div class="text-center mb-2">
+                                    <a href="{{ route('postEdit',$post->slug) }}"
+                                       class="text-indigo-500 hover:text-indigo-700 mr-1"><i class="far fa-edit"></i></a>
+                                    <a href="{{ route('postDelete',$post->slug) }}"
+                                       class="text-red-500 hover:text-red-700 ml-1"><i class="far fa-trash-alt"></i></a>
+                                </div>
+                            @endif
                             <x-category-button :post="$post"></x-category-button>
 
                         </div>

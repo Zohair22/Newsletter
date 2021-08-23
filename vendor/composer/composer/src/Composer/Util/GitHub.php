@@ -3,8 +3,8 @@
 /*
  * This file is part of Composer.
  *
- * (c) Nils Alderman <naderman@naderman.de>
- *     Jordi Bogging <j.boggiano@seld.be>
+ * (c) Nils Adermann <naderman@naderman.de>
+ *     Jordi Boggiano <j.boggiano@seld.be>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,7 +16,6 @@ use Composer\Factory;
 use Composer\IO\IOInterface;
 use Composer\Config;
 use Composer\Downloader\TransportException;
-use JetBrains\PhpStorm\ArrayShape;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -24,21 +23,21 @@ use JetBrains\PhpStorm\ArrayShape;
 class GitHub
 {
     /** @var IOInterface */
-    protected IOInterface $io;
+    protected $io;
     /** @var Config */
-    protected Config $config;
+    protected $config;
     /** @var ProcessExecutor */
-    protected ProcessExecutor $process;
+    protected $process;
     /** @var HttpDownloader */
-    protected HttpDownloader $httpDownloader;
+    protected $httpDownloader;
 
     /**
      * Constructor.
      *
-     * @param IOInterface $io The IO instance
-     * @param Config $config The composer configuration
-     * @param \Composer\Util\ProcessExecutor|null $process Process instance, injectable for mocking
-     * @param \Composer\Util\HttpDownloader|null $httpDownloader Remote Filesystem, injectable for mocking
+     * @param IOInterface     $io             The IO instance
+     * @param Config          $config         The composer configuration
+     * @param ProcessExecutor $process        Process instance, injectable for mocking
+     * @param HttpDownloader  $httpDownloader Remote Filesystem, injectable for mocking
      */
     public function __construct(IOInterface $io, Config $config, ProcessExecutor $process = null, HttpDownloader $httpDownloader = null)
     {
@@ -51,18 +50,17 @@ class GitHub
     /**
      * Attempts to authorize a GitHub domain via OAuth
      *
-     * @param string $originUrl The host this GitHub instance is located at
-     *
+     * @param  string $originUrl The host this GitHub instance is located at
      * @return bool   true on success
      */
-    public function authorizeOAuth(string $originUrl): bool
+    public function authorizeOAuth($originUrl)
     {
-        if (!in_array($originUrl, $this->config->get('github-domains'), true)) {
+        if (!in_array($originUrl, $this->config->get('github-domains'))) {
             return false;
         }
 
         // if available use token from git config
-        if (0 === $this->process->execute('git config github.accessToken', $output)) {
+        if (0 === $this->process->execute('git config github.accesstoken', $output)) {
             $this->io->setAuthentication($originUrl, trim($output), 'x-oauth-basic');
 
             return true;
@@ -74,14 +72,13 @@ class GitHub
     /**
      * Authorizes a GitHub domain interactively via OAuth
      *
-     * @param string $originUrl The host this GitHub instance is located at
-     * @param string|null $message   The reason this authorization is required
-     *
-     * @return bool                          true on success
-     *@throws TransportException|\Exception
+     * @param  string                        $originUrl The host this GitHub instance is located at
+     * @param  string                        $message   The reason this authorization is required
      * @throws \RuntimeException
+     * @throws TransportException|\Exception
+     * @return bool                          true on success
      */
-    public function authorizeOAuthInteractively(string $originUrl, string $message = null): bool
+    public function authorizeOAuthInteractively($originUrl, $message = null)
     {
         if ($message) {
             $this->io->writeError($message);
@@ -115,7 +112,7 @@ class GitHub
                 'retry-auth-failure' => false,
             ));
         } catch (TransportException $e) {
-            if (in_array($e->getCode(), array(403, 401), true)) {
+            if (in_array($e->getCode(), array(403, 401))) {
                 $this->io->writeError('<error>Invalid token provided.</error>');
                 $this->io->writeError('You can also add it manually later by using "composer config --global --auth github-oauth.github.com <token>"');
 
@@ -135,13 +132,13 @@ class GitHub
     }
 
     /**
-     * Extract rateLimit from response.
+     * Extract ratelimit from response.
      *
      * @param array $headers Headers from Composer\Downloader\TransportException.
      *
      * @return array Associative array with the keys limit and reset.
      */
-    #[ArrayShape(['limit' => "int|string", 'reset' => "string"])] public function getRateLimit(array $headers): array
+    public function getRateLimit(array $headers)
     {
         $rateLimit = array(
             'limit' => '?',
@@ -150,10 +147,10 @@ class GitHub
 
         foreach ($headers as $header) {
             $header = trim($header);
-            if (!str_contains($header, 'X-RateLimit-')) {
+            if (false === strpos($header, 'X-RateLimit-')) {
                 continue;
             }
-            [$type, $value] = explode(':', $header, 2);
+            list($type, $value) = explode(':', $header, 2);
             switch ($type) {
                 case 'X-RateLimit-Limit':
                     $rateLimit['limit'] = (int) trim($value);
@@ -174,7 +171,7 @@ class GitHub
      *
      * @return bool
      */
-    public function isRateLimited(array $headers): bool
+    public function isRateLimited(array $headers)
     {
         foreach ($headers as $header) {
             if (preg_match('{^X-RateLimit-Remaining: *0$}i', trim($header))) {

@@ -18,33 +18,16 @@ use Illuminate\Validation\Rule;
 class AdminPostController extends Controller
 {
 
-    public function __construct()
-    {
-        $this->middleware('admin');
-    }
+//    public function __construct()
+//    {
+//        $this->middleware('admin');
+//    }
 
     public function index(): Factory|View|Application
     {
         return view('admin.posts.index',[
             'posts' => Post::latest()->paginate(15)
         ]);
-    }
-
-    public function create(): View|Factory|Application
-    {
-        return view('admin.posts.create',[
-            'categories' => Category::all()
-        ]);
-    }
-
-    public function store(): Redirector|Application|RedirectResponse
-    {
-        $post = Post::create(array_merge($this->validatePost(), [
-            'published_at' => Carbon::now(),
-            'thumbnail' => request('thumbnail')->store('thumbnails')
-        ]));
-
-        return redirect(route('post', $post->slug))->with('success', 'Post Added');
     }
 
     public function edit(Post $post): Factory|View|Application

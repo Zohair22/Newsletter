@@ -11,13 +11,14 @@ class CreatePostsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up() : void
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
             $table->string('title');
+            $table->tinyInteger('published')->nullable()->default(0);
             $table->string('thumbnail')->nullable();
             $table->string('slug')->unique();
             $table->longText('body');
@@ -32,7 +33,7 @@ class CreatePostsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down() : void
     {
         Schema::dropIfExists('posts');
     }

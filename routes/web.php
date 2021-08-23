@@ -24,9 +24,7 @@ Route::middleware('guest')->group( function () {
 
 
 Route::middleware('admin')->group( function () {
-
-    Route::get('admin/posts/create', [AdminPostController::class, 'create'])->name('postCreate');
-    Route::post('admin/posts', [AdminPostController::class, 'store'])->name('postStore');
+    
     Route::get('admin/posts', [AdminPostController::class, 'index'])->name('adminPosts');
     Route::get('admin/posts/{post}/edit', [AdminPostController::class, 'edit'])->name('postEdit');
     Route::patch('admin/posts/{post}', [AdminPostController::class, 'update'])->name('postUpdate');
@@ -35,7 +33,10 @@ Route::middleware('admin')->group( function () {
 });
 
 Route::middleware('auth')->group( function () {
-
+    
+    Route::get('posts/create', [PostController::class, 'create'])->name('postCreate');
+    Route::post('posts', [PostController::class, 'store'])->name('postStore');
+    
     Route::post('posts/{post}/comment', [PostCommentsController::class, 'store'])->name('comment');
     Route::get('logout', [SessionController::class, 'destroy'])->name('logout');
 
