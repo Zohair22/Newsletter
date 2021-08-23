@@ -17,10 +17,10 @@ class MustBeAdministrators
      */
     public function handle(Request $request, Closure $next)
     {
-        if (auth()->user()->admin === 1)
+        if (auth()->user()?->admin === 1)
         {
             return $next($request);
         }
-        return redirect(route('posts'))->with('adminErrorMessage', 'Only Administrator can access this');
+        return back()->with('adminErrorMessage', 'Only Administrator can access this');
     }
 }

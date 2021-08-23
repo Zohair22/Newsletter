@@ -11,11 +11,13 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class AdminPostController extends Controller
 {
+
     public function __construct()
     {
         $this->middleware('admin');
@@ -24,7 +26,7 @@ class AdminPostController extends Controller
     public function index(): Factory|View|Application
     {
         return view('admin.posts.index',[
-            'posts' => Post::latest()->paginate(50)
+            'posts' => Post::latest()->paginate(15)
         ]);
     }
 

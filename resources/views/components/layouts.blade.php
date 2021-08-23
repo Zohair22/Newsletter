@@ -28,9 +28,17 @@
                     <x-slot name="trigger">
                         <button class="text-sm font-bold mr-3">Welcome, {{ ucwords(auth()->user()->name) }}</button>
                     </x-slot>
-                    <x-dropdown-item href="{{ route('adminPosts')}}" class="mt-2" active="{{ request()->routeIs('adminPosts') }}">All Posts</x-dropdown-item>
-                    <x-dropdown-item href="{{ route('postCreate') }}" active="{{ request()->routeIs('postCreate') }}">New Post</x-dropdown-item>
-                    <x-dropdown-item href="{{ route('logout') }}" class="font-semibold uppercase">logout</x-dropdown-item>
+                    <div class="mt-3">
+                        @admin
+                            <x-dropdown-item href="{{ route('adminPosts')}}"
+                                             active="{{ request()->routeIs('adminPosts') }}">All Posts
+                            </x-dropdown-item>
+                            <x-dropdown-item href="{{ route('postCreate') }}"
+                                             active="{{ request()->routeIs('postCreate') }}">New Post
+                            </x-dropdown-item>
+                        @endadmin
+                        <x-dropdown-item href="{{ route('logout') }}" class="font-semibold uppercase">logout</x-dropdown-item>
+                    </div>
                 </x-dropdown>
 
             @else

@@ -33,7 +33,9 @@
 
                             </tbody>
                         </table>
-                        {{ $post->links }}
+                        <div class="m-5">
+                            {{ $posts->links() }}
+                        </div>
                     </div>
                 </div>
             </div>
