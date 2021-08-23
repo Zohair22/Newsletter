@@ -8,7 +8,4 @@
     </option>
     <option name="synchronizeBranchProtectionRules" value="false" />
   </component>
-  <component name="VcsDirectoryMappings">
-    <mapping directory="$PROJECT_DIR$/Newsletter" vcs="Git" />
-  </component>
 </project>
