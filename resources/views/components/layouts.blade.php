@@ -18,7 +18,7 @@
     <nav class="md:flex md:justify-between md:items-center m-0 py-2 px-6 bg-gray-100">
         <div>
             <a href="{{ route('posts') }}">
-                <img src="{{ asset('storage/images/logo.svg') }}" alt="Laracasts Logo" width="165" height="16">
+                <span class="text-sm uppercase font-semibold text-blue-500 hover:text-blue-700">Home</span>
             </a>
         </div>
         
