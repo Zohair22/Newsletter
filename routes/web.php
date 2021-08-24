@@ -29,14 +29,16 @@ Route::middleware('admin')->group( function () {
     Route::get('admin/posts/{post}/edit', [AdminPostController::class, 'edit'])->name('postEdit');
     Route::patch('admin/posts/{post}', [AdminPostController::class, 'update'])->name('postUpdate');
     Route::get('admin/posts/{post}/postDelete', [AdminPostController::class, 'destroy'])->name('postDelete');
+    Route::get('admin/posts/{post}/publish', [AdminPostController::class, 'publish'])->name('adminPublish');
+    Route::get('admin/posts/{post}/unPublish', [AdminPostController::class, 'unPublish'])->name('adminUnPublish');
 
 });
 
 Route::middleware('auth')->group( function () {
     
-    Route::get('posts/create', [PostController::class, 'create'])->name('postCreate');
-    Route::post('posts', [PostController::class, 'store'])->name('postStore');
-    
+    Route::get('admin/posts/create', [AdminPostController::class, 'create'])->name('postCreate');
+    Route::post('admin/posts', [AdminPostController::class, 'store'])->name('postStore');
+
     Route::post('posts/{post}/comment', [PostCommentsController::class, 'store'])->name('comment');
     Route::get('logout', [SessionController::class, 'destroy'])->name('logout');
 
