@@ -2,13 +2,13 @@
 <!doctype html>
 <head>
     <title>Laravel From Scratch Blog</title>
-    
-    
+
+
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"/>
-    
+
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
 </head>
 <body>
@@ -19,7 +19,7 @@
                 <span class="text-sm uppercase font-semibold text-blue-500 hover:text-blue-700">Home</span>
             </a>
         </div>
-        
+
         <div class="mt-8 md:mt-0 flex items-center">
             @auth
                 <x-dropdown>
@@ -36,13 +36,13 @@
                         <x-dropdown-item href="{{ route('logout') }}" class="font-semibold uppercase">logout</x-dropdown-item>
                     </div>
                 </x-dropdown>
-            
+
             @else
                 <a href="{{ route('loginForm') }}" class="text-sm uppercase font-semibold text-blue-500 hover:text-blue-700">login</a>
                 <p class="mx-4">|</p>
                 <a href="{{ route('registerForm') }}" class="text-sm uppercase font-semibold text-blue-500 hover:text-blue-700">register</a>
             @endauth
-            
+
             <a href="#newsLetter"
                class="bg-blue-500 hover:bg-gray-100 border border-blue-500 text-white hover:text-blue-500 ml-5 rounded-full text-xs font-semibold uppercase py-2 px-6">
                 Subscribe for Updates
@@ -56,15 +56,15 @@
                 <img src="{{ asset('storage/images/lary-newsletter-icon.svg') }}" alt="" class="mx-auto -mb-6" style="width: 145px;">
                 <h5 class="text-3xl">Stay in touch with the latest posts</h5>
                 <p class="text-sm mt-3">Promise to keep the inbox clean. No bugs.</p>
-                
+
                 <div class="mt-10">
                     <div class="relative inline-block mx-auto lg:bg-gray-200 rounded-full">
-                        
+
                         <form method="POST" action="{{ route('newsletter') }}" class="lg:flex text-sm">
                             @csrf
                             <div class="lg:py-3 lg:px-5 flex items-center">
                                 <img src="{{ asset('storage/images/mailbox-icon.svg') }}" alt="mailbox letter">
-                                
+
                                 <label for="email" hidden>email</label>
                                 <input id="email" name="email" type="text" placeholder="Your email address"
                                        class="lg:bg-transparent py-2 lg:py-0 pl-4 focus-within:outline-none">
