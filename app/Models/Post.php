@@ -41,7 +41,7 @@ class Post extends Model
         return asset('storage/images/illustration-1.png');
     }
 
-    public function scopeFilter($query, array $filters)
+    public function scopeFilter($query, array $filters) : void
     {
         /* search by Post */
         $query->when($filters['search'] ?? false, fn ($query, $search) =>
