@@ -62,7 +62,8 @@ class FileStorage extends Storage
 	// Return the latest request
 	public function latest(Search $search = null)
 	{
-		return $this->loadRequests($this->searchIndexBackward($search, null, 1));
+		$requests = $this->loadRequests($this->searchIndexBackward($search, null, 1));
+		return reset($requests);
 	}
 
 	// Return requests received before specified id, optionally limited to specified count
@@ -168,13 +169,11 @@ class FileStorage extends Storage
 			if (! $search || $search->matches($request)) {
 				$found[] = $request->id;
 			} elseif ($search->stopOnFirstMismatch) {
-				return $found;
+				break;
 			}
 
-			if ($count && count($found) == $count) return $found;
+			if ($count && count($found) == $count) break;
 		}
-
-		if ($count == 1) return reset($found);
 
 		return $direction == 'next' ? $found : array_reverse($found);
 	}
@@ -198,6 +197,8 @@ class FileStorage extends Storage
 	{
 		if ($lock) flock($this->indexHandle, LOCK_UN);
 		fclose($this->indexHandle);
+
+		$this->indexHandle = null;
 	}
 
 	// Read a line from index in the specified direction (next or previous)

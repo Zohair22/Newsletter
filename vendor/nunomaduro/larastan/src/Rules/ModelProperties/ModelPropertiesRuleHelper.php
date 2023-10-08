@@ -12,11 +12,11 @@ use PhpParser\Node;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\MethodReflection;
-use PHPStan\Reflection\ParameterReflection;
 use PHPStan\Reflection\ParametersAcceptorSelector;
 use PHPStan\Type\ArrayType;
 use PHPStan\Type\Constant\ConstantArrayType;
 use PHPStan\Type\Constant\ConstantStringType;
+use PHPStan\Type\GeneralizePrecision;
 use PHPStan\Type\IntegerType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\StringType;
@@ -27,11 +27,10 @@ use PHPStan\Type\UnionType;
 class ModelPropertiesRuleHelper
 {
     /**
-     * @param MethodReflection $methodReflection
-     * @param Scope            $scope
-     * @param Node\Arg[]       $args
-     * @param ClassReflection|null  $modelReflection
-     *
+     * @param  MethodReflection  $methodReflection
+     * @param  Scope  $scope
+     * @param  Node\Arg[]  $args
+     * @param  ClassReflection|null  $modelReflection
      * @return string[]
      */
     public function check(MethodReflection $methodReflection, Scope $scope, array $args, ?ClassReflection $modelReflection = null): array
@@ -75,7 +74,7 @@ class ModelPropertiesRuleHelper
         if ($argType instanceof ConstantArrayType) {
             $errors = [];
 
-            $keyType = TypeUtils::generalizeType($argType->getKeyType());
+            $keyType = TypeUtils::generalizeType($argType->getKeyType(), GeneralizePrecision::lessSpecific());
 
             if ($keyType instanceof IntegerType) {
                 $valueTypes = $argType->getValuesArray()->getValueTypes();
@@ -134,11 +133,10 @@ class ModelPropertiesRuleHelper
     }
 
     /**
-     * @param MethodReflection $methodReflection
-     * @param Scope            $scope
-     * @param Node\Arg[]       $args
-     * @param ClassReflection|null  $modelReflection
-     *
+     * @param  MethodReflection  $methodReflection
+     * @param  Scope  $scope
+     * @param  Node\Arg[]  $args
+     * @param  ClassReflection|null  $modelReflection
      * @return array<int, int|Type>
      */
     public function hasModelPropertyParameter(
@@ -147,7 +145,6 @@ class ModelPropertiesRuleHelper
         array $args,
         ?ClassReflection $modelReflection = null
     ): array {
-        /** @var ParameterReflection[] $parameters */
         $parameters = ParametersAcceptorSelector::selectFromArgs($scope, $args, $methodReflection->getVariants())->getParameters();
 
         foreach ($parameters as $index => $parameter) {

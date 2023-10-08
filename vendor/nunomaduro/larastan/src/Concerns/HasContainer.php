@@ -16,13 +16,12 @@ use ReflectionException;
 trait HasContainer
 {
     /**
-     * @var \Illuminate\Contracts\Container\Container
+     * @var ?\Illuminate\Contracts\Container\Container
      */
     protected $container;
 
     /**
-     * @param \Illuminate\Contracts\Container\Container $container
-     *
+     * @param  \Illuminate\Contracts\Container\Container  $container
      * @return void
      */
     public function setContainer(ContainerContract $container): void
@@ -43,8 +42,7 @@ trait HasContainer
     /**
      * Resolve the given type from the container.
      *
-     * @param string $abstract
-     *
+     * @param  string  $abstract
      * @return mixed
      */
     public function resolve(string $abstract)

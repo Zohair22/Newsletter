@@ -2,6 +2,19 @@
 
 /**
  * @template TValue
+ * @template TDefault
+ *
+ * @param callable(): TValue $callback
+ * @param TDefault|(callable(\Throwable): TDefault) $rescue
+ * @param bool $report
+ * @return TValue|TDefault
+ */
+function rescue(callable $callback, $rescue = null, $report = true)
+{
+}
+
+/**
+ * @template TValue
  * @param int $times
  * @param callable(int): TValue $callback
  * @param int $sleep
@@ -17,7 +30,7 @@ function retry($times, callable $callback, $sleep = 0, $when = null)
 /**
  * @template TValue
  * @param TValue $value
- * @param null|callable(TValue): void $callback
+ * @param null|callable(TValue): mixed $callback
  * @return mixed
  */
 function tap($value, $callback = null)

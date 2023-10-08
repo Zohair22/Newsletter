@@ -6,7 +6,6 @@ parameters:
         - stubs/EloquentCollection.stub
         - stubs/Factory.stub
         - stubs/Model.stub
-        - stubs/JsonResource.stub
         - stubs/Gate.stub
         - stubs/Relation.stub
         - stubs/BelongsTo.stub
@@ -32,7 +31,6 @@ parameters:
         - stubs/Redis/Connection.stub
         - stubs/Logger.stub
         - stubs/EnumeratesValues.stub
-    scopeClass: NunoMaduro\Larastan\Analyser\Scope
     universalObjectCratesClasses:
         - Illuminate\Http\Request
     earlyTerminatingFunctionCalls:
@@ -46,6 +44,7 @@ parameters:
         - bootstrap.php
     checkGenericClassInNonGenericObjectType: false
     checkOctaneCompatibility: false
+    noModelMake: true
     noUnnecessaryCollectionCall: true
     noUnnecessaryCollectionCallOnly: []
     noUnnecessaryCollectionCallExcept: []
@@ -55,6 +54,7 @@ parameters:
 
 parametersSchema:
     checkOctaneCompatibility: bool()
+    noModelMake: bool()
     noUnnecessaryCollectionCall: bool()
     noUnnecessaryCollectionCallOnly: listOf(string())
     noUnnecessaryCollectionCallExcept: listOf(string())
@@ -62,6 +62,8 @@ parametersSchema:
     checkModelProperties: bool()
 
 conditionalTags:
+    NunoMaduro\Larastan\Rules\NoModelMakeRule:
+        phpstan.rules.rule: %noModelMake%
     NunoMaduro\Larastan\Rules\NoUnnecessaryCollectionCallRule:
         phpstan.rules.rule: %noUnnecessaryCollectionCall%
     NunoMaduro\Larastan\Rules\OctaneCompatibilityRule:
@@ -110,6 +112,10 @@ services:
         class: NunoMaduro\Larastan\Methods\ModelFactoryMethodsClassReflectionExtension
         tags:
             - phpstan.broker.methodsClassReflectionExtension
+    -
+        class: NunoMaduro\Larastan\Methods\RedirectResponseMethodsClassReflectionExtension
+        tags:
+            - phpstan.broker.methodsClassReflectionExtension
 
     -
         class: NunoMaduro\Larastan\Properties\ModelAccessorExtension
@@ -118,11 +124,6 @@ services:
 
     -
         class: NunoMaduro\Larastan\Properties\ModelPropertyExtension
-        tags:
-            - phpstan.broker.propertiesClassReflectionExtension
-
-    -
-        class: NunoMaduro\Larastan\Properties\Extension
         tags:
             - phpstan.broker.propertiesClassReflectionExtension
 
@@ -145,6 +146,30 @@ services:
         class: NunoMaduro\Larastan\ReturnTypes\HigherOrderTapProxyExtension
         tags:
             - phpstan.broker.dynamicMethodReturnTypeExtension
+    -
+        class: NunoMaduro\Larastan\ReturnTypes\ContainerArrayAccessDynamicMethodReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicMethodReturnTypeExtension
+        arguments:
+            className: Illuminate\Contracts\Container\Container
+    -
+        class: NunoMaduro\Larastan\ReturnTypes\ContainerArrayAccessDynamicMethodReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicMethodReturnTypeExtension
+        arguments:
+            className: Illuminate\Container\Container
+    -
+        class: NunoMaduro\Larastan\ReturnTypes\ContainerArrayAccessDynamicMethodReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicMethodReturnTypeExtension
+        arguments:
+            className: Illuminate\Foundation\Application
+    -
+        class: NunoMaduro\Larastan\ReturnTypes\ContainerArrayAccessDynamicMethodReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicMethodReturnTypeExtension
+        arguments:
+            className: Illuminate\Contracts\Foundation\Application
 
     -
         class: NunoMaduro\Larastan\Properties\ModelRelationsExtension
@@ -217,7 +242,20 @@ services:
             - phpstan.broker.dynamicMethodReturnTypeExtension
 
     -
+        class: NunoMaduro\Larastan\ReturnTypes\CollectionMakeDynamicStaticMethodReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicStaticMethodReturnTypeExtension
+
+    -
+        class: NunoMaduro\Larastan\Support\CollectionHelper
+
+    -
         class: NunoMaduro\Larastan\ReturnTypes\Helpers\AuthExtension
+        tags:
+            - phpstan.broker.dynamicFunctionReturnTypeExtension
+
+    -
+        class: NunoMaduro\Larastan\ReturnTypes\Helpers\CollectExtension
         tags:
             - phpstan.broker.dynamicFunctionReturnTypeExtension
 
@@ -260,6 +298,11 @@ services:
         class: NunoMaduro\Larastan\ReturnTypes\Helpers\ValidatorExtension
         tags:
             - phpstan.broker.dynamicFunctionReturnTypeExtension
+
+    -
+        class: NunoMaduro\Larastan\ReturnTypes\CollectionFilterDynamicReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicMethodReturnTypeExtension
 
     -
         class: NunoMaduro\Larastan\Types\AbortIfFunctionTypeSpecifyingExtension
@@ -327,6 +370,9 @@ services:
         class: NunoMaduro\Larastan\Rules\OctaneCompatibilityRule
 
     -
+        class: NunoMaduro\Larastan\Rules\NoModelMakeRule
+
+    -
         class: NunoMaduro\Larastan\Rules\NoUnnecessaryCollectionCallRule
         arguments:
             onlyMethods: %noUnnecessaryCollectionCallOnly%
@@ -334,13 +380,9 @@ services:
 
     -
         class: NunoMaduro\Larastan\Rules\ModelProperties\ModelPropertyRule
-        tags:
-            - phpstan.rules.rule
 
     -
         class: NunoMaduro\Larastan\Rules\ModelProperties\ModelPropertyStaticCallRule
-        tags:
-            - phpstan.rules.rule
 
     -
         class: NunoMaduro\Larastan\Types\GenericEloquentBuilderTypeNodeResolverExtension
@@ -356,17 +398,42 @@ services:
 
     -
         class: NunoMaduro\Larastan\Types\RelationParserHelper
+        arguments:
+            parser: @currentPhpVersionSimpleDirectParser
 
     -
         class: NunoMaduro\Larastan\Properties\MigrationHelper
         arguments:
             databaseMigrationPath: %databaseMigrationsPath%
-            currentWorkingDirectory: %currentWorkingDirectory%
+            parser: @currentPhpVersionSimpleDirectParser
 
     -
         class: NunoMaduro\Larastan\Rules\ModelProperties\ModelPropertiesRuleHelper
 
     -
+        class: NunoMaduro\Larastan\Rules\ModelRuleHelper
+
+    -
         class: NunoMaduro\Larastan\Methods\BuilderHelper
         arguments:
             checkProperties: %checkModelProperties%
+
+    -
+        class: NunoMaduro\Larastan\Rules\RelationExistenceRule
+        tags:
+            - phpstan.rule
+
+    -
+        class: NunoMaduro\Larastan\Rules\CheckDispatchArgumentTypesCompatibleWithClassConstructorRule
+        arguments:
+            dispatchableClass: Illuminate\Foundation\Bus\Dispatchable
+        tags:
+            - phpstan.rules.rule
+    -
+        class: NunoMaduro\Larastan\Rules\CheckDispatchArgumentTypesCompatibleWithClassConstructorRule
+        arguments:
+            dispatchableClass: Illuminate\Foundation\Events\Dispatchable
+        tags:
+            - phpstan.rules.rule
+rules:
+    - NunoMaduro\Larastan\Rules\RelationExistenceRule

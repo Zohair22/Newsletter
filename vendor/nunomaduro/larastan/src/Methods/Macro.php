@@ -4,23 +4,33 @@ declare(strict_types=1);
 
 namespace NunoMaduro\Larastan\Methods;
 
+use function array_map;
 use Closure;
 use ErrorException;
-use PHPStan\Reflection\Php\BuiltinMethodReflection;
+use Illuminate\Validation\ValidationException;
+use PHPStan\Reflection\ClassMemberReflection;
+use PHPStan\Reflection\ClassReflection;
+use PHPStan\Reflection\FunctionVariant;
+use PHPStan\Reflection\MethodReflection;
+use PHPStan\Reflection\ParameterReflection;
+use PHPStan\Reflection\PassedByReference;
 use PHPStan\TrinaryLogic;
-use ReflectionClass;
+use PHPStan\Type\Generic\TemplateTypeMap;
+use PHPStan\Type\MixedType;
+use PHPStan\Type\ObjectType;
+use PHPStan\Type\Type;
+use PHPStan\Type\TypehintHelper;
 use ReflectionFunction;
 use ReflectionParameter;
+use ReflectionType;
 use stdClass;
 
-final class Macro implements BuiltinMethodReflection
+final class Macro implements MethodReflection
 {
     /**
-     * The class name.
-     *
-     * @var class-string
+     * @var ClassReflection
      */
-    private $className;
+    private $classReflection;
 
     /**
      * The method name.
@@ -51,16 +61,18 @@ final class Macro implements BuiltinMethodReflection
     private $isStatic = false;
 
     /**
-     * Macro constructor.
+     * Map of macro methods and thrown exception classes.
      *
-     * @param string $className
-     * @phpstan-param class-string $className
-     * @param string $methodName
-     * @param ReflectionFunction $reflectionFunction
+     * @var string[]
      */
-    public function __construct(string $className, string $methodName, ReflectionFunction $reflectionFunction)
+    private $methodThrowTypeMap = [
+        'validate' => ValidationException::class,
+        'validateWithBag' => ValidationException::class,
+    ];
+
+    public function __construct(ClassReflection $classReflection, string $methodName, ReflectionFunction $reflectionFunction)
     {
-        $this->className = $className;
+        $this->classReflection = $classReflection;
         $this->methodName = $methodName;
         $this->reflectionFunction = $reflectionFunction;
         $this->parameters = $this->reflectionFunction->getParameters();
@@ -78,49 +90,31 @@ final class Macro implements BuiltinMethodReflection
         }
     }
 
-    /**
-     * {@inheritdoc}
-     * @phpstan-ignore-next-line
-     */
-    public function getDeclaringClass(): ReflectionClass
+    public function getDeclaringClass(): ClassReflection
     {
-        return new ReflectionClass($this->className);
+        return $this->classReflection;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isPrivate(): bool
     {
         return false;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isPublic(): bool
     {
         return true;
     }
 
-    public function isFinal(): bool
+    public function isFinal(): TrinaryLogic
     {
-        return false;
+        return TrinaryLogic::createNo();
     }
 
-    public function isInternal(): bool
+    public function isInternal(): TrinaryLogic
     {
-        return false;
+        return TrinaryLogic::createNo();
     }
 
-    public function isAbstract(): bool
-    {
-        return false;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function isStatic(): bool
     {
         return $this->isStatic;
@@ -129,8 +123,7 @@ final class Macro implements BuiltinMethodReflection
     /**
      * Set the is static value.
      *
-     * @param bool $isStatic
-     *
+     * @param  bool  $isStatic
      * @return void
      */
     public function setIsStatic(bool $isStatic): void
@@ -149,32 +142,70 @@ final class Macro implements BuiltinMethodReflection
     /**
      * {@inheritdoc}
      */
-    public function getFileName()
-    {
-        return $this->reflectionFunction->getFileName();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return $this->methodName;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    /** @return ParameterReflection[] */
     public function getParameters(): array
     {
-        return $this->parameters;
+        return array_map(function (ReflectionParameter $reflection): ParameterReflection {
+            return new class($reflection) implements ParameterReflection
+            {
+                /**
+                 * @var ReflectionParameter
+                 */
+                private $reflection;
+
+                public function __construct(ReflectionParameter $reflection)
+                {
+                    $this->reflection = $reflection;
+                }
+
+                public function getName(): string
+                {
+                    return $this->reflection->getName();
+                }
+
+                public function isOptional(): bool
+                {
+                    return $this->reflection->isOptional();
+                }
+
+                public function getType(): Type
+                {
+                    $type = $this->reflection->getType();
+
+                    if ($type === null) {
+                        return new MixedType();
+                    }
+
+                    return TypehintHelper::decideTypeFromReflection($this->reflection->getType());
+                }
+
+                public function passedByReference(): PassedByReference
+                {
+                    return PassedByReference::createNo();
+                }
+
+                public function isVariadic(): bool
+                {
+                    return $this->reflection->isVariadic();
+                }
+
+                public function getDefaultValue(): ?Type
+                {
+                    return null;
+                }
+            };
+        }, $this->parameters);
     }
 
     /**
      * Set the parameters value.
      *
-     * @param ReflectionParameter[] $parameters
-     *
+     * @param  ReflectionParameter[]  $parameters
      * @return void
      */
     public function setParameters(array $parameters): void
@@ -182,56 +213,47 @@ final class Macro implements BuiltinMethodReflection
         $this->parameters = $parameters;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getReturnType(): ?\ReflectionType
+    public function getReturnType(): ?ReflectionType
     {
         return $this->reflectionFunction->getReturnType();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getStartLine()
-    {
-        return $this->reflectionFunction->getStartLine();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getEndLine()
-    {
-        return $this->reflectionFunction->getEndLine();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function isDeprecated(): TrinaryLogic
     {
         return TrinaryLogic::createFromBoolean($this->reflectionFunction->isDeprecated());
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function isVariadic(): bool
-    {
-        return $this->reflectionFunction->isVariadic();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getPrototype(): BuiltinMethodReflection
+    public function getPrototype(): ClassMemberReflection
     {
         return $this;
     }
 
-    public function getReflection(): ?\ReflectionMethod
+    /**
+     * @inheritDoc
+     */
+    public function getVariants(): array
+    {
+        return [
+            new FunctionVariant(TemplateTypeMap::createEmpty(), null, $this->getParameters(), $this->reflectionFunction->isVariadic(), TypehintHelper::decideTypeFromReflection($this->getReturnType())),
+        ];
+    }
+
+    public function getDeprecatedDescription(): ?string
     {
         return null;
+    }
+
+    public function getThrowType(): ?Type
+    {
+        if (array_key_exists($this->methodName, $this->methodThrowTypeMap)) {
+            return new ObjectType($this->methodThrowTypeMap[$this->methodName]);
+        }
+
+        return null;
+    }
+
+    public function hasSideEffects(): TrinaryLogic
+    {
+        return TrinaryLogic::createMaybe();
     }
 }

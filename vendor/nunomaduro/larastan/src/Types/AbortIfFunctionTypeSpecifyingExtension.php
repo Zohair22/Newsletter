@@ -4,15 +4,6 @@ declare(strict_types=1);
 
 namespace NunoMaduro\Larastan\Types;
 
-/*
- * This file is part of Larastan.
- *
- * (c) Nuno Maduro <enunomaduro@gmail.com>
- *
- *  For the full copyright and license information, please view the LICENSE
- *  file that was distributed with this source code.
- */
-
 use PhpParser\Node\Expr\FuncCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Analyser\SpecifiedTypes;
@@ -59,7 +50,7 @@ final class AbortIfFunctionTypeSpecifyingExtension implements FunctionTypeSpecif
 
         $context = $this->negate === false ? TypeSpecifierContext::createFalsey() : TypeSpecifierContext::createTruthy();
 
-        return $this->typeSpecifier->specifyTypesInCondition($scope, $node->args[0]->value, $context);
+        return $this->typeSpecifier->specifyTypesInCondition($scope, $node->getArgs()[0]->value, $context);
     }
 
     public function setTypeSpecifier(TypeSpecifier $typeSpecifier): void

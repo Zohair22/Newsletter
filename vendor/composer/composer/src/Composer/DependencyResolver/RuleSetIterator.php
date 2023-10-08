@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -14,16 +14,25 @@ namespace Composer\DependencyResolver;
 
 /**
  * @author Nils Adermann <naderman@naderman.de>
+ * @implements \Iterator<RuleSet::TYPE_*, Rule>
  */
 class RuleSetIterator implements \Iterator
 {
+    /** @var array<RuleSet::TYPE_*, Rule[]> */
     protected $rules;
+    /** @var array<RuleSet::TYPE_*> */
     protected $types;
 
+    /** @var int */
     protected $currentOffset;
+    /** @var RuleSet::TYPE_*|-1 */
     protected $currentType;
+    /** @var int */
     protected $currentTypeOffset;
 
+    /**
+     * @param array<RuleSet::TYPE_*, Rule[]> $rules
+     */
     public function __construct(array $rules)
     {
         $this->rules = $rules;
@@ -33,20 +42,20 @@ class RuleSetIterator implements \Iterator
         $this->rewind();
     }
 
-    #[\ReturnTypeWillChange]
-    public function current()
+    public function current(): Rule
     {
         return $this->rules[$this->currentType][$this->currentOffset];
     }
 
-    #[\ReturnTypeWillChange]
-    public function key()
+    /**
+     * @return RuleSet::TYPE_*|-1
+     */
+    public function key(): int
     {
         return $this->currentType;
     }
 
-    #[\ReturnTypeWillChange]
-    public function next()
+    public function next(): void
     {
         $this->currentOffset++;
 
@@ -66,12 +75,11 @@ class RuleSetIterator implements \Iterator
                 }
 
                 $this->currentType = $this->types[$this->currentTypeOffset];
-            } while (isset($this->types[$this->currentTypeOffset]) && !\count($this->rules[$this->currentType]));
+            } while (0 === \count($this->rules[$this->currentType]));
         }
     }
 
-    #[\ReturnTypeWillChange]
-    public function rewind()
+    public function rewind(): void
     {
         $this->currentOffset = 0;
 
@@ -87,11 +95,10 @@ class RuleSetIterator implements \Iterator
             }
 
             $this->currentType = $this->types[$this->currentTypeOffset];
-        } while (isset($this->types[$this->currentTypeOffset]) && !\count($this->rules[$this->currentType]));
+        } while (0 === \count($this->rules[$this->currentType]));
     }
 
-    #[\ReturnTypeWillChange]
-    public function valid()
+    public function valid(): bool
     {
         return isset($this->rules[$this->currentType], $this->rules[$this->currentType][$this->currentOffset]);
     }

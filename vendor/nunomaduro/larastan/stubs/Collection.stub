@@ -3,7 +3,7 @@
 namespace Illuminate\Support;
 
 /**
- * @template TKey
+ * @template TKey of array-key
  * @template TValue
  * @implements \ArrayAccess<TKey, TValue>
  * @implements Enumerable<TKey, TValue>
@@ -11,24 +11,34 @@ namespace Illuminate\Support;
 class Collection implements \ArrayAccess, Enumerable
 {
     /**
-     * @param  callable|null  $callback
-     * @param  mixed  $default
-     * @return TValue|null
+     * @template TDefault
+     * @param    null|callable(TValue, TKey): bool  $callback
+     * @param    TDefault|callable(): TDefault  $default
+     * @return   TValue|TDefault
      */
     public function first(callable $callback = null, $default = null){}
 
     /**
-     * @param  callable|null  $callback
-     * @param  mixed  $default
+     * @param  string  $key
+     * @param  mixed  $operator
+     * @param  mixed  $value
      * @return TValue|null
+     */
+    public function firstWhere($key, $operator = null, $value = null){}
+
+    /**
+     * @template TDefault
+     * @param  null|callable(TValue, TKey): bool  $callback
+     * @param  TDefault|callable(): TDefault  $default
+     * @return TValue|TDefault
      */
     public function last(callable $callback = null, $default = null){}
 
-
     /**
-     * @param  mixed  $key
-     * @param  mixed  $default
-     * @return TValue|null
+     * @template TDefault
+     * @param    TKey  $key
+     * @param    TDefault  $default
+     * @return   TValue|TDefault
      */
     public function get($key, $default = null) {}
 
@@ -38,9 +48,10 @@ class Collection implements \ArrayAccess, Enumerable
     public function pop() {}
 
     /**
-     * @param  mixed  $key
-     * @param  mixed  $default
-     * @return TValue|null
+     * @template TDefault
+     * @param    TKey  $key
+     * @param    TDefault  $default
+     * @return   TValue|TDefault
      */
     public function pull($key, $default = null) {}
 
@@ -70,10 +81,24 @@ class Collection implements \ArrayAccess, Enumerable
     public function map($callable) {}
 
     /**
-     * @param callable(TValue, TKey): array<mixed> $callback
-     * @return static<mixed, mixed>
+     * Run a grouping map over the items.
+     *
+     * The callback should return an associative array with a single key/value pair.
+     *
+     * @template TMapToGroupsKey of array-key
+     * @template TMapToGroupsValue
+     *
+     * @param  callable(TValue, TKey): array<TMapToGroupsKey, TMapToGroupsValue>  $callback
+     * @return static<TMapToGroupsKey, static<int, TMapToGroupsValue>>
      */
     public function mapToGroups(callable $callback) {}
+
+    /**
+     * @param array<mixed>|string|callable(TValue, TKey): mixed $groupBy
+     * @param bool $preserveKeys
+     * @return static<array-key, static<TKey, TValue>>
+     */
+    public function groupBy($groupBy, $preserveKeys = false);
 
     /**
      * @template TClass
@@ -83,14 +108,16 @@ class Collection implements \ArrayAccess, Enumerable
     public function mapInto($class);
 
     /**
-     * @param callable(TValue, TKey): mixed $callback
-     * @return static<mixed, mixed>
+     * @template TReturn
+     * @param callable(TValue, TKey): (array<TReturn>|\Illuminate\Support\Enumerable<array-key, TReturn>) $callback
+     * @return static<TKey, TReturn>
      */
     public function flatMap(callable $callback) {}
 
     /**
-     * @param callable $callback
-     * @return static<int, mixed>
+     * @template TReturn
+     * @param callable(TValue ...$values): TReturn $callback
+     * @return static<int, TReturn>
      */
     public function mapSpread(callable $callback) {}
 
@@ -107,4 +134,26 @@ class Collection implements \ArrayAccess, Enumerable
      * @return static<int, mixed>
      */
     public function pluck($value, $key = null) {}
+
+    /**
+     * @return TValue
+     */
+    public function pop() {}
+
+    /**
+     * Push one or more items onto the end of the collection.
+     *
+     * @param TValue ...$values
+     * @return static
+     */
+    public function push(...$values) {}
+
+    /**
+     * Put an item in the collection by key.
+     *
+     * @param TKey $key
+     * @param TValue $value
+     * @return static
+     */
+    public function put($key, $value) {}
 }

@@ -29,6 +29,7 @@ class ClockworkServiceProvider extends ServiceProvider
 			$this->registerMiddleware();
 		}
 
+		$this->app['clockwork.support']->handleArtisanEvents();
 		$this->app['clockwork.support']->handleOctaneEvents();
 
 		// If Clockwork is disabled, return before registering middleware or routes
@@ -239,8 +240,11 @@ class ClockworkServiceProvider extends ServiceProvider
 	// Register middleware
 	protected function registerMiddleware()
 	{
-		$this->app[\Illuminate\Contracts\Http\Kernel::class]
-			->prependMiddleware(ClockworkMiddleware::class);
+		$kernel = $this->app[\Illuminate\Contracts\Http\Kernel::class];
+
+		if (method_exists($kernel, 'hasMiddleware') && $kernel->hasMiddleware(ClockworkMiddleware::class)) return;
+
+		$kernel->prependMiddleware(ClockworkMiddleware::class);
 	}
 
 	protected function registerRoutes()

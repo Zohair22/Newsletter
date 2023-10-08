@@ -133,6 +133,9 @@ final class BufferStream implements StreamInterface
         return strlen($string);
     }
 
+    /**
+     * @return mixed
+     */
     public function getMetadata($key = null)
     {
         if ($key === 'hwm') {

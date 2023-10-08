@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Composer.
@@ -16,6 +16,7 @@ use Composer\Package\AliasPackage;
 use Composer\Package\Link;
 use Composer\Package\PackageInterface;
 use Composer\Repository\PlatformRepository;
+use Composer\DependencyResolver\Operation\OperationInterface;
 
 /**
  * @author Nils Adermann <naderman@naderman.de>
@@ -24,45 +25,55 @@ use Composer\Repository\PlatformRepository;
 class Transaction
 {
     /**
-     * @var array
+     * @var OperationInterface[]
      */
     protected $operations;
 
     /**
      * Packages present at the beginning of the transaction
-     * @var array
+     * @var PackageInterface[]
      */
     protected $presentPackages;
 
     /**
      * Package set resulting from this transaction
-     * @var array
+     * @var array<string, PackageInterface>
      */
     protected $resultPackageMap;
 
     /**
-     * @var array
+     * @var array<string, PackageInterface[]>
      */
-    protected $resultPackagesByName = array();
+    protected $resultPackagesByName = [];
 
-    public function __construct($presentPackages, $resultPackages)
+    /**
+     * @param PackageInterface[] $presentPackages
+     * @param PackageInterface[] $resultPackages
+     */
+    public function __construct(array $presentPackages, array $resultPackages)
     {
         $this->presentPackages = $presentPackages;
         $this->setResultPackageMaps($resultPackages);
         $this->operations = $this->calculateOperations();
     }
 
-    public function getOperations()
+    /**
+     * @return OperationInterface[]
+     */
+    public function getOperations(): array
     {
         return $this->operations;
     }
 
-    private function setResultPackageMaps($resultPackages)
+    /**
+     * @param PackageInterface[] $resultPackages
+     */
+    private function setResultPackageMaps(array $resultPackages): void
     {
-        $packageSort = function (PackageInterface $a, PackageInterface $b) {
+        $packageSort = static function (PackageInterface $a, PackageInterface $b): int {
             // sort alias packages by the same name behind their non alias version
-            if ($a->getName() == $b->getName()) {
-                if ($a instanceof AliasPackage != $b instanceof AliasPackage) {
+            if ($a->getName() === $b->getName()) {
+                if ($a instanceof AliasPackage !== $b instanceof AliasPackage) {
                     return $a instanceof AliasPackage ? -1 : 1;
                 }
                 // if names are the same, compare version, e.g. to sort aliases reliably, actual order does not matter
@@ -72,7 +83,7 @@ class Transaction
             return strcmp($b->getName(), $a->getName());
         };
 
-        $this->resultPackageMap = array();
+        $this->resultPackageMap = [];
         foreach ($resultPackages as $package) {
             $this->resultPackageMap[spl_object_hash($package)] = $package;
             foreach ($package->getNames() as $name) {
@@ -86,14 +97,17 @@ class Transaction
         }
     }
 
-    protected function calculateOperations()
+    /**
+     * @return OperationInterface[]
+     */
+    protected function calculateOperations(): array
     {
-        $operations = array();
+        $operations = [];
 
-        $presentPackageMap = array();
-        $removeMap = array();
-        $presentAliasMap = array();
-        $removeAliasMap = array();
+        $presentPackageMap = [];
+        $removeMap = [];
+        $presentAliasMap = [];
+        $removeAliasMap = [];
         foreach ($this->presentPackages as $package) {
             if ($package instanceof AliasPackage) {
                 $presentAliasMap[$package->getName().'::'.$package->getVersion()] = $package;
@@ -106,8 +120,8 @@ class Transaction
 
         $stack = $this->getRootPackages();
 
-        $visited = array();
-        $processed = array();
+        $visited = [];
+        $processed = [];
 
         while (!empty($stack)) {
             $package = array_pop($stack);
@@ -147,7 +161,7 @@ class Transaction
 
                         // do we need to update?
                         // TODO different for lock?
-                        if ($package->getVersion() != $presentPackageMap[$package->getName()]->getVersion() ||
+                        if ($package->getVersion() !== $presentPackageMap[$package->getName()]->getVersion() ||
                             $package->getDistReference() !== $presentPackageMap[$package->getName()]->getDistReference() ||
                             $package->getSourceReference() !== $presentPackageMap[$package->getName()]->getSourceReference()
                         ) {
@@ -201,9 +215,9 @@ class Transaction
      * These serve as a starting point to enumerate packages in a topological order despite potential cycles.
      * If there are packages with a cycle on the top level the package with the lowest name gets picked
      *
-     * @return array
+     * @return array<string, PackageInterface>
      */
-    protected function getRootPackages()
+    protected function getRootPackages(): array
     {
         $roots = $this->resultPackageMap;
 
@@ -226,10 +240,13 @@ class Transaction
         return $roots;
     }
 
-    protected function getProvidersInResult(Link $link)
+    /**
+     * @return PackageInterface[]
+     */
+    protected function getProvidersInResult(Link $link): array
     {
         if (!isset($this->resultPackagesByName[$link->getTarget()])) {
-            return array();
+            return [];
         }
 
         return $this->resultPackagesByName[$link->getTarget()];
@@ -245,17 +262,17 @@ class Transaction
      * it at least fixes the symptoms and makes usage of composer possible (again)
      * in such scenarios.
      *
-     * @param  Operation\OperationInterface[] $operations
-     * @return Operation\OperationInterface[] reordered operation list
+     * @param  OperationInterface[] $operations
+     * @return OperationInterface[] reordered operation list
      */
-    private function movePluginsToFront(array $operations)
+    private function movePluginsToFront(array $operations): array
     {
-        $dlModifyingPluginsNoDeps = array();
-        $dlModifyingPluginsWithDeps = array();
-        $dlModifyingPluginRequires = array();
-        $pluginsNoDeps = array();
-        $pluginsWithDeps = array();
-        $pluginRequires = array();
+        $dlModifyingPluginsNoDeps = [];
+        $dlModifyingPluginsWithDeps = [];
+        $dlModifyingPluginRequires = [];
+        $pluginsNoDeps = [];
+        $pluginsWithDeps = [];
+        $pluginRequires = [];
 
         foreach (array_reverse($operations, true) as $idx => $op) {
             if ($op instanceof Operation\InstallOperation) {
@@ -271,7 +288,7 @@ class Transaction
             // is this a downloads modifying plugin or a dependency of one?
             if ($isDownloadsModifyingPlugin || count(array_intersect($package->getNames(), $dlModifyingPluginRequires))) {
                 // get the package's requires, but filter out any platform requirements
-                $requires = array_filter(array_keys($package->getRequires()), function ($req) {
+                $requires = array_filter(array_keys($package->getRequires()), static function ($req): bool {
                     return !PlatformRepository::isPlatformPackage($req);
                 });
 
@@ -296,7 +313,7 @@ class Transaction
             // is this a plugin or a dependency of a plugin?
             if ($isPlugin || count(array_intersect($package->getNames(), $pluginRequires))) {
                 // get the package's requires, but filter out any platform requirements
-                $requires = array_filter(array_keys($package->getRequires()), function ($req) {
+                $requires = array_filter(array_keys($package->getRequires()), static function ($req): bool {
                     return !PlatformRepository::isPlatformPackage($req);
                 });
 
@@ -322,12 +339,12 @@ class Transaction
      * Removals of packages should be executed before installations in
      * case two packages resolve to the same path (due to custom installers)
      *
-     * @param  Operation\OperationInterface[] $operations
-     * @return Operation\OperationInterface[] reordered operation list
+     * @param  OperationInterface[] $operations
+     * @return OperationInterface[] reordered operation list
      */
-    private function moveUninstallsToFront(array $operations)
+    private function moveUninstallsToFront(array $operations): array
     {
-        $uninstOps = array();
+        $uninstOps = [];
         foreach ($operations as $idx => $op) {
             if ($op instanceof Operation\UninstallOperation || $op instanceof Operation\MarkAliasUninstalledOperation) {
                 $uninstOps[] = $op;

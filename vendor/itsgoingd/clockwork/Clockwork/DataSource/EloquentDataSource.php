@@ -17,6 +17,9 @@ class EloquentDataSource extends DataSource
 	// Database manager instance
 	protected $databaseManager;
 
+	// Event dispatcher instance
+	protected $eventDispatcher;
+
 	// Array of collected queries
 	protected $queries = [];
 
@@ -198,7 +201,7 @@ class EloquentDataSource extends DataSource
 
 		$action = [
 			'model'      => $modelClass = get_class($model),
-			'key'        => $model->getKey(),
+			'key'        => $this->getModelKey($model),
 			'action'     => $event,
 			'attributes' => $this->collectModelsRetrieved && $event == 'retrieved' ? $model->getOriginal() : [],
 			'changes'    => $this->collectModelsActions ? $model->getChanges() : [],
@@ -231,17 +234,16 @@ class EloquentDataSource extends DataSource
 		// add bindings to query
 		$bindings = $this->databaseManager->connection($connection)->prepareBindings($bindings);
 
-		foreach ($bindings as $binding) {
-			$binding = $this->quoteBinding($binding, $connection);
+		$index = 0;
+		$query = preg_replace_callback('/\?/', function ($matches) use ($bindings, $connection, &$index) {
+			$binding = $this->quoteBinding($bindings[$index++], $connection);
 
 			// convert binary bindings to hexadecimal representation
-			if (! preg_match('//u', $binding)) $binding = '0x' . bin2hex($binding);
+			if (! preg_match('//u', (string) $binding)) $binding = '0x' . bin2hex($binding);
 
 			// escape backslashes in the binding (preg_replace requires to do so)
-			$binding = str_replace('\\', '\\\\', $binding);
-
-			$query = preg_replace('/\?/', $binding, $query, 1);
-		}
+			return (string) $binding;
+		}, $query, count($bindings));
 
 		// highlight keywords
 		$keywords = [
@@ -269,7 +271,7 @@ class EloquentDataSource extends DataSource
 			return "'" . str_replace("'", "''", $binding) . "'";
 		}
 
-		return $pdo->quote($binding);
+		return is_string($binding) ? $pdo->quote($binding) : $binding;
 	}
 
 	// Increment query counts for collected query
@@ -315,5 +317,13 @@ class EloquentDataSource extends DataSource
 		}
 
 		return new ResolveModelScope($this);
+	}
+
+	// Returns model key without crashing when using Eloquent strict mode and it's not loaded
+	protected function getModelKey($model)
+	{
+		try {
+			return $model->getKey();
+		} catch (\Illuminate\Database\Eloquent\MissingAttributeException $e) {}
 	}
 }

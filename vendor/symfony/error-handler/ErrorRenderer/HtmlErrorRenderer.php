@@ -58,8 +58,8 @@ class HtmlErrorRenderer implements ErrorRendererInterface
         }
 
         $this->debug = $debug;
-        $this->charset = $charset ?: (ini_get('default_charset') ?: 'UTF-8');
-        $this->fileLinkFormat = $fileLinkFormat ?: (ini_get('xdebug.file_link_format') ?: get_cfg_var('xdebug.file_link_format'));
+        $this->charset = $charset ?: (\ini_get('default_charset') ?: 'UTF-8');
+        $this->fileLinkFormat = $fileLinkFormat ?: (\ini_get('xdebug.file_link_format') ?: get_cfg_var('xdebug.file_link_format'));
         $this->projectDir = $projectDir;
         $this->outputBuffer = $outputBuffer;
         $this->logger = $logger;
@@ -215,7 +215,7 @@ class HtmlErrorRenderer implements ErrorRendererInterface
     /**
      * Returns the link for a given file/line pair.
      *
-     * @return string|false A link or false
+     * @return string|false
      */
     private function getFileLink(string $file, int $line)
     {
@@ -262,8 +262,6 @@ class HtmlErrorRenderer implements ErrorRendererInterface
      * @param string $file       A file path
      * @param int    $line       The selected line number
      * @param int    $srcContext The number of displayed lines around or -1 for the whole file
-     *
-     * @return string An HTML string
      */
     private function fileExcerpt(string $file, int $line, int $srcContext = 3): string
     {
@@ -271,13 +269,25 @@ class HtmlErrorRenderer implements ErrorRendererInterface
             // highlight_file could throw warnings
             // see https://bugs.php.net/25725
             $code = @highlight_file($file, true);
-            // remove main code/span tags
-            $code = preg_replace('#^<code.*?>\s*<span.*?>(.*)</span>\s*</code>#s', '\\1', $code);
-            // split multiline spans
-            $code = preg_replace_callback('#<span ([^>]++)>((?:[^<]*+<br \/>)++[^<]*+)</span>#', function ($m) {
-                return "<span $m[1]>".str_replace('<br />', "</span><br /><span $m[1]>", $m[2]).'</span>';
-            }, $code);
-            $content = explode('<br />', $code);
+            if (\PHP_VERSION_ID >= 80300) {
+                // remove main pre/code tags
+                $code = preg_replace('#^<pre.*?>\s*<code.*?>(.*)</code>\s*</pre>#s', '\\1', $code);
+                // split multiline code tags
+                $code = preg_replace_callback('#<code ([^>]++)>((?:[^<]*+\\n)++[^<]*+)</code>#', function ($m) {
+                    return "<code $m[1]>".str_replace("\n", "</code>\n<code $m[1]>", $m[2]).'</code>';
+                }, $code);
+                // Convert spaces to html entities to preserve indentation when rendered
+                $code = str_replace(' ', '&nbsp;', $code);
+                $content = explode("\n", $code);
+            } else {
+                // remove main code/span tags
+                $code = preg_replace('#^<code.*?>\s*<span.*?>(.*)</span>\s*</code>#s', '\\1', $code);
+                // split multiline spans
+                $code = preg_replace_callback('#<span ([^>]++)>((?:[^<]*+<br \/>)++[^<]*+)</span>#', function ($m) {
+                    return "<span $m[1]>".str_replace('<br />', "</span><br /><span $m[1]>", $m[2]).'</span>';
+                }, $code);
+                $content = explode('<br />', $code);
+            }
 
             $lines = [];
             if (0 > $srcContext) {
@@ -325,7 +335,7 @@ class HtmlErrorRenderer implements ErrorRendererInterface
         if ($context && false !== strpos($message, '{')) {
             $replacements = [];
             foreach ($context as $key => $val) {
-                if (is_scalar($val)) {
+                if (\is_scalar($val)) {
                     $replacements['{'.$key.'}'] = $val;
                 }
             }

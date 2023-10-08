@@ -47,21 +47,21 @@ class Kernel implements KernelContract
      *
      * @var array
      */
-    protected array $middleware = [];
+    protected $middleware = [];
 
     /**
      * The application's route middleware groups.
      *
      * @var array
      */
-    protected array $middlewareGroups = [];
+    protected $middlewareGroups = [];
 
     /**
      * The application's route middleware.
      *
      * @var array
      */
-    protected array $routeMiddleware = [];
+    protected $routeMiddleware = [];
 
     /**
      * The priority-sorted list of middleware.
@@ -76,6 +76,7 @@ class Kernel implements KernelContract
         \Illuminate\View\Middleware\ShareErrorsFromSession::class,
         \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
         \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        \Illuminate\Routing\Middleware\ThrottleRequestsWithRedis::class,
         \Illuminate\Session\Middleware\AuthenticateSession::class,
         \Illuminate\Routing\Middleware\SubstituteBindings::class,
         \Illuminate\Auth\Middleware\Authorize::class,

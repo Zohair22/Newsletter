@@ -83,7 +83,7 @@ class CliDumper extends AbstractDumper
             ]);
         }
 
-        $this->displayOptions['fileLinkFormat'] = ini_get('xdebug.file_link_format') ?: get_cfg_var('xdebug.file_link_format') ?: 'file://%f#L%l';
+        $this->displayOptions['fileLinkFormat'] = \ini_get('xdebug.file_link_format') ?: get_cfg_var('xdebug.file_link_format') ?: 'file://%f#L%l';
     }
 
     /**
@@ -128,6 +128,7 @@ class CliDumper extends AbstractDumper
     public function dumpScalar(Cursor $cursor, string $type, $value)
     {
         $this->dumpKey($cursor);
+        $this->collapseNextHash = $this->expandNextHash = false;
 
         $style = 'const';
         $attr = $cursor->attr;
@@ -139,10 +140,19 @@ class CliDumper extends AbstractDumper
 
             case 'integer':
                 $style = 'num';
+
+                if (isset($this->styles['integer'])) {
+                    $style = 'integer';
+                }
+
                 break;
 
             case 'double':
                 $style = 'num';
+
+                if (isset($this->styles['float'])) {
+                    $style = 'float';
+                }
 
                 switch (true) {
                     case \INF === $value:  $value = 'INF'; break;
@@ -182,6 +192,7 @@ class CliDumper extends AbstractDumper
     public function dumpString(Cursor $cursor, string $str, bool $bin, int $cut)
     {
         $this->dumpKey($cursor);
+        $this->collapseNextHash = $this->expandNextHash = false;
         $attr = $cursor->attr;
 
         if ($bin) {
@@ -189,6 +200,9 @@ class CliDumper extends AbstractDumper
         }
         if ('' === $str) {
             $this->line .= '""';
+            if ($cut) {
+                $this->line .= '…'.$cut;
+            }
             $this->endValue($cursor);
         } else {
             $attr += [
@@ -274,6 +288,7 @@ class CliDumper extends AbstractDumper
         }
 
         $this->dumpKey($cursor);
+        $this->expandNextHash = false;
         $attr = $cursor->attr;
 
         if ($this->collapseNextHash) {
@@ -426,7 +441,7 @@ class CliDumper extends AbstractDumper
      * @param string $value The value being styled
      * @param array  $attr  Optional context information
      *
-     * @return string The value with style decoration
+     * @return string
      */
     protected function style(string $style, string $value, array $attr = [])
     {
@@ -436,7 +451,8 @@ class CliDumper extends AbstractDumper
 
         if (null === $this->handlesHrefGracefully) {
             $this->handlesHrefGracefully = 'JetBrains-JediTerm' !== getenv('TERMINAL_EMULATOR')
-                && (!getenv('KONSOLE_VERSION') || (int) getenv('KONSOLE_VERSION') > 201100);
+                && (!getenv('KONSOLE_VERSION') || (int) getenv('KONSOLE_VERSION') > 201100)
+                && !isset($_SERVER['IDEA_INITIAL_DIRECTORY']);
         }
 
         if (isset($attr['ellipsis'], $attr['ellipsis-type'])) {
@@ -502,7 +518,7 @@ class CliDumper extends AbstractDumper
     }
 
     /**
-     * @return bool Tells if the current output stream supports ANSI colors or not
+     * @return bool
      */
     protected function supportsColors()
     {

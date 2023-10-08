@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace NunoMaduro\Larastan\Properties;
 
+use Illuminate\Support\Str;
 use PhpParser;
 use PhpParser\NodeFinder;
 
@@ -16,7 +17,7 @@ final class SchemaAggregator
     public $tables = [];
 
     /**
-     * @param array<int, PhpParser\Node\Stmt> $stmts
+     * @param  array<int, PhpParser\Node\Stmt>  $stmts
      */
     public function addStatements(array $stmts): void
     {
@@ -31,7 +32,7 @@ final class SchemaAggregator
     }
 
     /**
-     * @param array<int, PhpParser\Node\Stmt> $stmts
+     * @param  array<int, PhpParser\Node\Stmt>  $stmts
      */
     private function addClassStatements(array $stmts): void
     {
@@ -46,7 +47,7 @@ final class SchemaAggregator
     }
 
     /**
-     * @param PhpParser\Node\Stmt[] $stmts
+     * @param  PhpParser\Node\Stmt[]  $stmts
      */
     private function addUpMethodStatements(array $stmts): void
     {
@@ -75,7 +76,7 @@ final class SchemaAggregator
                         break;
 
                     case 'rename':
-                        $this->renameTable($stmt->expr);
+                        $this->renameTableThroughStaticCall($stmt->expr);
                 }
             }
         }
@@ -84,42 +85,42 @@ final class SchemaAggregator
     private function alterTable(PhpParser\Node\Expr\StaticCall $call, bool $creating): void
     {
         if (! isset($call->args[0])
-            || ! $call->args[0]->value instanceof PhpParser\Node\Scalar\String_
+            || ! $call->getArgs()[0]->value instanceof PhpParser\Node\Scalar\String_
         ) {
             return;
         }
 
-        $tableName = $call->args[0]->value->value;
+        $tableName = $call->getArgs()[0]->value->value;
 
         if ($creating) {
             $this->tables[$tableName] = new SchemaTable($tableName);
         }
 
         if (! isset($call->args[1])
-            || ! $call->args[1]->value instanceof PhpParser\Node\Expr\Closure
-            || count($call->args[1]->value->params) < 1
-            || ($call->args[1]->value->params[0]->type instanceof PhpParser\Node\Name
-                && $call->args[1]->value->params[0]->type->toCodeString()
+            || ! $call->getArgs()[1]->value instanceof PhpParser\Node\Expr\Closure
+            || count($call->getArgs()[1]->value->params) < 1
+            || ($call->getArgs()[1]->value->params[0]->type instanceof PhpParser\Node\Name
+                && $call->getArgs()[1]->value->params[0]->type->toCodeString()
                 !== '\\Illuminate\Database\Schema\Blueprint')
         ) {
             return;
         }
 
-        $updateClosure = $call->args[1]->value;
+        $updateClosure = $call->getArgs()[1]->value;
 
-        if ($call->args[1]->value->params[0]->var instanceof PhpParser\Node\Expr\Variable
-            && is_string($call->args[1]->value->params[0]->var->name)
+        if ($call->getArgs()[1]->value->params[0]->var instanceof PhpParser\Node\Expr\Variable
+            && is_string($call->getArgs()[1]->value->params[0]->var->name)
         ) {
-            $argName = $call->args[1]->value->params[0]->var->name;
+            $argName = $call->getArgs()[1]->value->params[0]->var->name;
 
             $this->processColumnUpdates($tableName, $argName, $updateClosure->stmts);
         }
     }
 
     /**
-     * @param string                $tableName
-     * @param string                $argName
-     * @param PhpParser\Node\Stmt[] $stmts
+     * @param  string  $tableName
+     * @param  string  $argName
+     * @param  PhpParser\Node\Stmt[]  $stmts
      *
      * @throws \Exception
      */
@@ -157,8 +158,29 @@ final class SchemaAggregator
                     && $rootVar->name === $argName
                     && $firstMethodCall->name instanceof PhpParser\Node\Identifier
                 ) {
-                    $firstArg = $firstMethodCall->args[0]->value ?? null;
-                    $secondArg = $firstMethodCall->args[1]->value ?? null;
+                    $firstArg = $firstMethodCall->getArgs()[0]->value ?? null;
+                    $secondArg = $firstMethodCall->getArgs()[1]->value ?? null;
+
+                    if ($firstMethodCall->name->name === 'foreignIdFor') {
+                        if ($firstArg instanceof PhpParser\Node\Expr\ClassConstFetch
+                            && $firstArg->class instanceof PhpParser\Node\Name
+                        ) {
+                            $modelClass = $firstArg->class->toCodeString();
+                        } elseif ($firstArg instanceof PhpParser\Node\Scalar\String_) {
+                            $modelClass = $firstArg->value;
+                        } else {
+                            continue;
+                        }
+
+                        $columnName = Str::snake(class_basename($modelClass)).'_id';
+                        if ($secondArg instanceof PhpParser\Node\Scalar\String_) {
+                            $columnName = $secondArg->value;
+                        }
+
+                        $table->setColumn(new SchemaColumn($columnName, 'int', $nullable));
+
+                        continue;
+                    }
 
                     if (! $firstArg instanceof PhpParser\Node\Scalar\String_) {
                         if ($firstMethodCall->name->name === 'timestamps'
@@ -281,6 +303,15 @@ final class SchemaAggregator
                             $table->setColumn(new SchemaColumn($columnName, 'float', $nullable));
                             break;
 
+                        case 'after':
+                            if ($secondArg instanceof PhpParser\Node\Expr\Closure
+                                && $secondArg->params[0]->var instanceof PhpParser\Node\Expr\Variable
+                                && ! ($secondArg->params[0]->var->name instanceof PhpParser\Node\Expr)) {
+                                $argName = $secondArg->params[0]->var->name;
+                                $this->processColumnUpdates($tableName, $argName, $secondArg->stmts);
+                            }
+                            break;
+
                         case 'dropcolumn':
                         case 'dropifexists':
                         case 'dropsoftdeletes':
@@ -328,6 +359,9 @@ final class SchemaAggregator
                             break;
 
                         case 'rename':
+                            $this->renameTableThroughMethodCall($table, $stmt->expr);
+                            break;
+
                         case 'renamecolumn':
                             if ($secondArg instanceof PhpParser\Node\Scalar\String_) {
                                 $table->renameColumn($columnName, $secondArg->value);
@@ -364,28 +398,50 @@ final class SchemaAggregator
     private function dropTable(PhpParser\Node\Expr\StaticCall $call): void
     {
         if (! isset($call->args[0])
-            || ! $call->args[0]->value instanceof PhpParser\Node\Scalar\String_
+            || ! $call->getArgs()[0]->value instanceof PhpParser\Node\Scalar\String_
         ) {
             return;
         }
 
-        $tableName = $call->args[0]->value->value;
+        $tableName = $call->getArgs()[0]->value->value;
 
         unset($this->tables[$tableName]);
     }
 
-    private function renameTable(PhpParser\Node\Expr\StaticCall $call): void
+    private function renameTableThroughStaticCall(PhpParser\Node\Expr\StaticCall $call): void
     {
         if (! isset($call->args[0], $call->args[1])
-            || ! $call->args[0]->value instanceof PhpParser\Node\Scalar\String_
-            || ! $call->args[1]->value instanceof PhpParser\Node\Scalar\String_
+            || ! $call->getArgs()[0]->value instanceof PhpParser\Node\Scalar\String_
+            || ! $call->getArgs()[1]->value instanceof PhpParser\Node\Scalar\String_
         ) {
             return;
         }
 
-        $oldTableName = $call->args[0]->value->value;
-        $newTableName = $call->args[1]->value->value;
+        $oldTableName = $call->getArgs()[0]->value->value;
+        $newTableName = $call->getArgs()[1]->value->value;
 
+        $this->renameTable($oldTableName, $newTableName);
+    }
+
+    private function renameTableThroughMethodCall(SchemaTable $oldTable, PhpParser\Node\Expr\MethodCall $call): void
+    {
+        if (! isset($call->args[0])
+            || ! $call->getArgs()[0]->value instanceof PhpParser\Node\Scalar\String_
+        ) {
+            return;
+        }
+
+        /** @var PhpParser\Node\Scalar\String_ $methodCallArgument */
+        $methodCallArgument = $call->getArgs()[0]->value;
+
+        $oldTableName = $oldTable->name;
+        $newTableName = $methodCallArgument->value;
+
+        $this->renameTable($oldTableName, $newTableName);
+    }
+
+    private function renameTable(string $oldTableName, string $newTableName): void
+    {
         if (! isset($this->tables[$oldTableName])) {
             return;
         }

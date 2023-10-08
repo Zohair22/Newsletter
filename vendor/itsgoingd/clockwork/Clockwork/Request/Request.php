@@ -80,6 +80,7 @@ class Request
 	public $databaseUpdates;
 	public $databaseDeletes;
 	public $databaseOthers;
+	public $databaseDuration;
 
 	// Cache queries
 	public $cacheQueries = [];
@@ -358,7 +359,7 @@ class Request
 		return $this->currentTimeline;
 	}
 
-	// Add a new overriden property
+	// Add a new overridden property
 	public function override($property, $value)
 	{
 		$this->overrides[$property] = $value;

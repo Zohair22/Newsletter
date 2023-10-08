@@ -7,8 +7,8 @@ namespace NunoMaduro\Larastan\Properties;
 use ArrayObject;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use NunoMaduro\Larastan\Reflection\ReflectionHelper;
 use PHPStan\PhpDoc\TypeStringResolver;
-use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\PropertiesClassReflectionExtension;
 use PHPStan\Reflection\PropertyReflection;
@@ -20,7 +20,7 @@ use PHPStan\Type\IntegerType;
  */
 final class ModelPropertyExtension implements PropertiesClassReflectionExtension
 {
-    /** @var SchemaTable[] */
+    /** @var array<string, SchemaTable> */
     private $tables = [];
 
     /** @var TypeStringResolver */
@@ -29,16 +29,12 @@ final class ModelPropertyExtension implements PropertiesClassReflectionExtension
     /** @var string */
     private $dateClass;
 
-    /** @var AnnotationsPropertiesClassReflectionExtension */
-    private $annotationExtension;
-
     /** @var MigrationHelper */
     private $migrationHelper;
 
-    public function __construct(TypeStringResolver $stringResolver, AnnotationsPropertiesClassReflectionExtension $annotationExtension, MigrationHelper $migrationHelper)
+    public function __construct(TypeStringResolver $stringResolver, MigrationHelper $migrationHelper)
     {
         $this->stringResolver = $stringResolver;
-        $this->annotationExtension = $annotationExtension;
         $this->migrationHelper = $migrationHelper;
     }
 
@@ -56,7 +52,7 @@ final class ModelPropertyExtension implements PropertiesClassReflectionExtension
             return false;
         }
 
-        if ($this->annotationExtension->hasProperty($classReflection, $propertyName)) {
+        if (ReflectionHelper::hasPropertyTag($classReflection, $propertyName)) {
             return false;
         }
 
@@ -158,9 +154,8 @@ final class ModelPropertyExtension implements PropertiesClassReflectionExtension
     }
 
     /**
-     * @param SchemaColumn $column
-     * @param Model $modelInstance
-     *
+     * @param  SchemaColumn  $column
+     * @param  Model  $modelInstance
      * @return string[]
      * @phpstan-return array<int, string>
      */

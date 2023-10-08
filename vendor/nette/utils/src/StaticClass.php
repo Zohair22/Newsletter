@@ -15,19 +15,19 @@ namespace Nette;
  */
 trait StaticClass
 {
-	/** @throws \Error */
-	final public function __construct()
+	/**
+	 * Class is static and cannot be instantiated.
+	 */
+	final private function __construct()
 	{
-		throw new \Error('Class ' . static::class . ' is static and cannot be instantiated.');
 	}
 
 
 	/**
 	 * Call to undefined static method.
-	 * @return void
 	 * @throws MemberAccessException
 	 */
-	public static function __callStatic(string $name, array $args)
+	public static function __callStatic(string $name, array $args): mixed
 	{
 		Utils\ObjectHelpers::strictStaticCall(static::class, $name);
 	}

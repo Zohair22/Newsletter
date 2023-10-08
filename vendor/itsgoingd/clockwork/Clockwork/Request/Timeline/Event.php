@@ -46,14 +46,15 @@ class Event
 		return $this;
 	}
 
-	// Begin the event, execute the passed in closure and end the event
+	// Begin the event, execute the passed in closure and end the event, returns the closure return value
 	public function run(\Closure $closure)
 	{
 		$this->begin();
-
-		$closure();
-
-		return $this->end();
+		try {
+			return $closure();
+		} finally {
+			$this->end();
+		}
 	}
 
 	// Set or retrieve event duration (in ms), event can be defined with both start and end time or just a single time and duration

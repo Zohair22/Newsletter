@@ -80,7 +80,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * Return an UploadedFile instance array.
      *
-     * @param array $files A array which respect $_FILES structure
+     * @param array $files An array which respect $_FILES structure
      *
      * @throws InvalidArgumentException for unrecognized values
      */
@@ -144,10 +144,10 @@ class ServerRequest extends Request implements ServerRequestInterface
         foreach (array_keys($files['tmp_name']) as $key) {
             $spec = [
                 'tmp_name' => $files['tmp_name'][$key],
-                'size'     => $files['size'][$key],
-                'error'    => $files['error'][$key],
-                'name'     => $files['name'][$key],
-                'type'     => $files['type'][$key],
+                'size' => $files['size'][$key] ?? null,
+                'error' => $files['error'][$key] ?? null,
+                'name' => $files['name'][$key] ?? null,
+                'type' => $files['type'][$key] ?? null,
             ];
             $normalizedFiles[$key] = self::createUploadedFileFromSpec($spec);
         }
@@ -182,7 +182,7 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     private static function extractHostAndPortFromAuthority(string $authority): array
     {
-        $uri = 'http://' . $authority;
+        $uri = 'http://'.$authority;
         $parts = parse_url($uri);
         if (false === $parts) {
             return [null, null];
@@ -285,6 +285,9 @@ class ServerRequest extends Request implements ServerRequestInterface
         return $new;
     }
 
+    /**
+     * @return array|object|null
+     */
     public function getParsedBody()
     {
         return $this->parsedBody;
@@ -303,6 +306,9 @@ class ServerRequest extends Request implements ServerRequestInterface
         return $this->attributes;
     }
 
+    /**
+     * @return mixed
+     */
     public function getAttribute($attribute, $default = null)
     {
         if (false === array_key_exists($attribute, $this->attributes)) {
