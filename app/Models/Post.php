@@ -11,7 +11,7 @@ class Post extends Model
 {
     use HasFactory;
 
-    protected array $with = ['author', 'category'];
+    protected $with = ['author', 'category'];
 
     public function author(): BelongsTo
     {
@@ -38,7 +38,7 @@ class Post extends Model
         if (isset($thumbnail)){
             return asset('storage/'.$thumbnail);
         }
-        return asset('storage/images/illustration-1.png');
+        return asset('storage/thumbnails/DFm7t78cNLBbfjUJGdkkzUHT2PD1U7DzdMqIm5Ao.jpg');
     }
 
     public function scopeFilter($query, array $filters) : void

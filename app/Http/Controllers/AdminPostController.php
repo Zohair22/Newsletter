@@ -43,13 +43,13 @@ class AdminPostController extends Controller
             Post::create(array_merge($this->validatePost(), [
                 'published_at' => Carbon::now(),
                 'published' => true,
-                'thumbnail' => request('thumbnail')->store('thumbnails')
+                'thumbnail' => request('thumbnail')->store('public/thumbnails')
             ]));
             return redirect(route('adminPosts'))->with('success', 'Post Added');
         }
         Post::create(array_merge($this->validatePost(), [
             'published_at' => Carbon::now(),
-            'thumbnail' => request('thumbnail')->store('thumbnails')
+            'thumbnail' => request('thumbnail')->store('public/thumbnails')
         ]));
         return redirect(route('posts'))->with('success', 'Post Added Successfully, wating for admin to approve.');
 

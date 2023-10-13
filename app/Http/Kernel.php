@@ -37,7 +37,7 @@ class Kernel extends HttpKernel
      *
      * @var array
      */
-    protected array $middleware = [
+    protected $middleware = [
 //         TrustHosts::class,
         TrustProxies::class,
         HandleCors::class,
@@ -52,7 +52,7 @@ class Kernel extends HttpKernel
      *
      * @var array
      */
-    protected array $middlewareGroups = [
+    protected  $middlewareGroups = [
         'web' => [
             EncryptCookies::class,
             AddQueuedCookiesToResponse::class,
@@ -76,7 +76,7 @@ class Kernel extends HttpKernel
      *
      * @var array
      */
-    protected array $routeMiddleware = [
+    protected  $routeMiddleware = [
         'auth' => Authenticate::class,
         'admin' => MustBeAdministrators::class,
         'auth.basic' => AuthenticateWithBasicAuth::class,
